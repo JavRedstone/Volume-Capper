@@ -1,0 +1,174 @@
+@keyframes opacity-fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+body {
+    width: 400px;
+
+    background: #F3E5F5;
+
+    color: #4A148C;
+
+    animation: opacity-fade 0.3s;
+}
+
+::-webkit-scrollbar {
+    width: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #AB47BC;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #4A148C; 
+}
+
+.extension-header {
+    width: 100%;
+
+    position: fixed;
+    top: 5px;
+
+    background-color: #E1BEE7;
+
+    box-shadow: 0 0 10px #E1BEE7;
+
+    z-index: 1;
+}
+
+.extension-icon {
+    width: 30px;
+
+    margin-left: 5px;
+}
+
+.extension-name {
+    position: absolute;
+    margin-left: 10px;
+
+    font-size: 20px;
+    /* font-weight: 300; */
+}
+
+.extension-description {
+    margin-top: 40px;
+
+    font-size: 15px;
+}
+
+.extension-switch {
+    box-sizing: border-box;
+
+    padding: 5px;
+
+    outline: none;
+    border: 5px solid transparent;
+
+    background: #E1BEE7;
+
+    font-size: 20px;
+    font-weight: 300;
+    color: #4A148C;
+
+    cursor: pointer;
+
+    transition: border 0.1s;
+}
+
+.extension-switch:hover {
+    border: 5px solid #AB47BC;
+}
+
+.amplitude-slider {
+    -webkit-appearance: none;
+
+    opacity: 1;
+
+    width: 100%;
+    height: 15px;
+
+    background: #AB47BC;
+
+    outline: none;
+
+    transition: opacity 0.1s;
+}
+
+.amplitude-slider:disabled {
+    opacity: 0.25;
+}
+
+.amplitude-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+
+    width: 25px;
+    height: 25px;
+
+    background: #4A148C;
+
+    cursor: pointer;
+
+    transition: all 0.1s;
+    transition-property: width, height;
+}
+
+.amplitude-slider::-webkit-slider-thumb:hover {
+    width: 30px;
+    height: 30px;
+}
+
+.amplitude-limit-text {
+    font-size: 15px;
+}
+
+.amplitude-canvas {
+    border: 1px solid #AB47BC;
+    background: #E1BEE7;
+}
+
+.amplitude-table-title {
+    font-size: 15px;
+}
+
+.amplitude-table {
+    width: 400px;
+
+    border-collapse: collapse;
+
+    text-align: center;
+}
+
+.amplitude-table th {
+    padding: 5px;
+
+    background: #4A148C;
+
+    border: 1px solid #AB47BC;
+
+    color: #fff;
+}
+
+.amplitude-table tr {
+    animation: opacity-fade 0.3s;
+
+    transition: background 0.3s;
+}
+
+.amplitude-table tr:nth-child(even) {
+    background: #E1BEE7;
+}
+
+.amplitude-table tr:hover {
+    background: #AB47BC;
+    
+    color: #fff;
+}
+
+.amplitude-table td {
+    padding: 5px;
+
+    border: 1px solid #4A148C;
+}
