@@ -1,45 +1,94 @@
-// EVENT LISTENERS
+/**
+ * @author Javier Huang
+ * @license CC0-1.0
+ */
 
+/* Event Listeners */
+
+/**
+ * Listens when the extension is installed
+ * 
+ * @listens
+ */
 chrome.runtime.onInstalled.addListener(
-    details => {
-        console.log(`Successfully Installed Amplitude Controller\nRuntime Details ----------\nPrevious Version: ${details.previousVersion}\nReason: ${details.reason}\n--------------------------`);
-        chrome.storage.local.clear();
-        let tabDebugging = setInterval(debugStorage, 500);
+    async ( details ) => {
+        let logPrinting = setInterval(printLog, 1000);
+        await clearLocalStorage();
+        let message = 'Amplitude Controller was successfully installed.';
+        for (let detail in details) {
+            message += `\n${detail}: ${details[detail]}`;
+        }
+        createLogMessage(message);
     }
 );
 
-chrome.tabs.onRemoved.addListener(
-    (tabId, removeInfo) => {
-        chrome.storage.local.remove(`${tabId}`);
-    }
-);
-
+/**
+ * Listens when the tab is selected
+ * 
+ * @listens
+ */
 chrome.tabs.onActivated.addListener(
-    activeInfo => {
+    ( activeInfo ) => {
         setTabBadge(activeInfo.tabId);
     }
 )
 
-// FUNCTIONS
+/* Functions */
 
-async function setTabBadge(tabId) {
-    let result = await chrome.storage.local.get(`${tabId}`);
-    let tabResult = result[`${tabId}`];    
-    if (tabResult != undefined && tabResult.on) {
-        chrome.action.setBadgeText({ text: `${tabResult.amplitudeLimit}` });
-        chrome.action.setBadgeBackgroundColor({ color: '#AB47BC' });
-    }
-    else {
-        chrome.action.setBadgeText({ text: '' });
-    }
+/**
+ * Clears the chrome local storage
+ * 
+ * @async
+ * @function clearLocalStorage
+ */
+async function clearLocalStorage() {
+    await chrome.storage.local.clear();
+    await createLogMessage('Cleared chrome local storage');
 }
 
-// DEBUG
+/**
+ * Creates a new log message
+ * 
+ * @async
+ * @function createLogMessage
+ * @param { string } message
+ */
+async function createLogMessage(message) {
+    let keys = await chrome.storage.local.get('log');
+    let timeString = new Date().toTimeString();
+    let logMessage = (keys.log == undefined ? '' : `${keys.log}\n\n`) + `${timeString}----------\n\n${message}`;
+    await chrome.storage.local.set({
+        log: logMessage
+    });
+}
 
-function debugStorage() {
-    chrome.storage.local.get(null,
-        items => {
-            console.log(items);
-        }
-    );
+/**
+ * Prints the log
+ * 
+ * @async
+ * @function printLog
+ */
+async function printLog() {
+    let keys = await chrome.storage.local.get('log');
+    console.log(keys.log);
+}
+
+/**
+ * Sets the badge of a tab, given the tabId
+ * 
+ * @async
+ * @function setTabBadge
+ * @param { number } tabId
+ */
+async function setTabBadge(tabId) {
+    let keys = await chrome.storage.local.get(`${tabId}`);
+    let tab = keys[`${tabId}`];
+    let text = '';
+    let color = '#AB47BC';
+    if (tab != undefined && tab.on) {
+        text = `${tab.amplitudeLimit}`;
+    }
+    chrome.action.setBadgeText({ text: text });
+    chrome.action.setBadgeBackgroundColor({ color: color });
+    await createLogMessage(`Set badge text of tab ${tabId} to ${text} and badge color to ${color}`);
 }

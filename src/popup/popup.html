@@ -4,26 +4,22 @@
         <link rel = "stylesheet" href = "./popup.css">
     </head>
     <body>
-        <div class = "extension-header">
-            <img class = "extension-icon" src = "./../assets/icons/amplitude_controller_icon.svg">
-            <span class = "extension-name">Amplitude Controller</span>
+        <div id = "header">
+            <img id = "icon" src = "./../assets/icons/amplitude_controller_icon.svg">
+            <span id = "name">Amplitude Controller</span>
+            <label id = "switch">
+                <input id = "switch-checkbox" type = "checkbox">
+                <span id = "switch-slider"></span>
+            </label>
         </div>
-        <p class = "extension-description">This extension controls the amplitude of volume when a sound is played on a tab. It reduces the peaks of sound greater than the selected value to diminish loud sounds while keeping soft sounds still audible. Good for school environments when playing music out loud.</p>
-        <p align = "center">
-            <button class = "extension-switch"></button>
-        </p>
-        <input class = "amplitude-slider" type = "range" min = "0" max = "130">
-        <p class = "amplitude-limit-text" align = "center"></p>
-        <canvas class = "amplitude-canvas" width = "400px" height = "150px"></canvas>
-        <p class = "amplitude-table-title">Visited Tabs - Non active tabs may be out of date</p>
-        <table class = "amplitude-table">
-            <tr>
-                <th>Tab Name</th>
-                <th>Audible</th>
-                <th>On</th>
-                <th>Amplitude Limit (dB)</th>
-            </tr>
-        </table>
+        <div id = "content">
+            <p id = "description">This extension controls the amplitude of volume when a sound is played on a tab. It reduces the peaks of sound greater than the selected value to diminish loud sounds while keeping soft sounds still audible. Good for school environments when playing music out loud.</p>
+            <p id = "canvas-label" align = "center">Frequency (Hz) vs. Volume (dB)</p>
+            <canvas id = "canvas" width = "360" height = "180"></canvas>
+        </div>
+        <div id = "footer">
+            <input id = "slider" type = "range" min = "0" max = "130">
+        </div>
     </body>
     <script src = "./popup.js"></script>
 </html>
