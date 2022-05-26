@@ -81,14 +81,12 @@ async function printLog() {
  * @param { number } tabId
  */
 async function setTabBadge(tabId) {
-    let keys = await chrome.storage.local.get(`${tabId}`);
-    let tab = keys[`${tabId}`];
+    let keys = await chrome.storage.local.get(tabId);
+    let tabVariables = keys[tabId];
     let text = '';
-    let color = '#AB47BC';
-    if (tab != undefined && tab.on) {
-        text = `${tab.amplitudeLimit}`;
+    if (tabVariables != undefined && tabVariables.on) {
+        text = `${tabVariables.amplitudeLimit}`;
     }
     chrome.action.setBadgeText({ text: text });
-    chrome.action.setBadgeBackgroundColor({ color: color });
-    await createLogMessage(`Set badge text of tab ${tabId} to ${text} and badge color to ${color}`);
+    await createLogMessage(`Set badge text of tab ${tabId} to ${text}`);
 }

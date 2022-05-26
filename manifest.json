@@ -15,16 +15,10 @@
     "action": {
       "default_popup": "./src/popup/popup.html",
       "default_icon": {
-        "16": "./src/assets/icons/amplitude_controller_icon16.png",
-        "32": "./src/assets/icons/amplitude_controller_icon32.png",
-        "48": "./src/assets/icons/amplitude_controller_icon48.png",
-        "128": "./src/assets/icons/amplitude_controller_icon128.png"
+        "128": "./src/assets/icons/amplitude_controller_icon.png"
       }
     },
     "icons": {
-      "16": "./src/assets/icons/amplitude_controller_icon16.png",
-      "32": "./src/assets/icons/amplitude_controller_icon32.png",
-      "48": "./src/assets/icons/amplitude_controller_icon48.png",
-      "128": "./src/assets/icons/amplitude_controller_icon128.png"
+      "128": "./src/assets/icons/amplitude_controller_icon.png"
     }
   }

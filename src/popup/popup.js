@@ -26,7 +26,7 @@ let slider = document.getElementById('slider');
 window.addEventListener('load',
     async ( ev ) => {
         _tab = await getCurrentTab();
-        let tabVariables = await getLocalTabStorage(_tab);
+        let tabVariables = await getLocalTabStorage(_tab.id);
         if (tabVariables != undefined) {
             if (tabVariables.on != null) {
                 _on = tabVariables.on;
@@ -45,21 +45,10 @@ window.addEventListener('load',
  * @listens
  */
 switchCheckbox.addEventListener('change',
-    ( ev ) => {
+    async ( ev ) => {
         _on = !_on;
         await updateLocalTabStorage(_tab, _on, _amplitudeLimit);
-        await updateTableValues();
-    }
-);
-
-/**
- * Listens when the slider's value is changed
- * 
- * @listens
- */
-slider.addEventListener('change',
-    ( ev ) => {
-        await updateTableValues();
+        await setTabBadge(_tab.id);
     }
 );
 
@@ -69,9 +58,10 @@ slider.addEventListener('change',
  * @listens
  */
 slider.addEventListener('input',
-    ( ev ) => {
+    async ( ev ) => {
         _amplitudeLimit = parseInt(slider.value);
-        updateLocalTabStorage(_tab, _on, _amplitudeLimit);
+        await updateLocalTabStorage(_tab, _on, _amplitudeLimit);
+        await setTabBadge(_tab.id);
     }
 );
 
@@ -93,12 +83,12 @@ async function getCurrentTab() {
 /**
  * Returns the local tab storage object when given a tab id
  * 
- * @param { Tab } tab 
+ * @param { number } tabId 
  * @returns { Object }
  */
 async function getLocalTabStorage(tabId) {
-    let keys = await chrome.storage.local.get(`${tabId}`);
-    return keys[`${tabId}`];
+    let keys = await chrome.storage.local.get(tabId);
+    return keys[tabId];
 }
 
 /**
@@ -114,6 +104,23 @@ function displayVariables(on, amplitudeLimit) {
 }
 
 /**
+ * Sets the badge of a tab, given the tabId
+ * 
+ * @async
+ * @function setTabBadge
+ * @param { number } tabId 
+ */
+async function setTabBadge(tabId) {
+    let tabVariables = await getLocalTabStorage(tabId);
+    let text = '';
+    if (tabVariables != undefined && tabVariables.on) {
+        text = `${tabVariables.amplitudeLimit}`;
+    }
+    chrome.action.setBadgeText({ text: text });
+    await createLogMessage(`Set badge text of tab ${tabId} to ${text}`);
+}
+
+/**
  * Updates the local storage variables for the tab provided
  * 
  * @async
@@ -123,6 +130,7 @@ function displayVariables(on, amplitudeLimit) {
  * @param { number } amplitudeLimit 
  */
 async function updateLocalTabStorage(tab, on, amplitudeLimit) {
+    console.log(tab, on, amplitudeLimit)
     if (tab != null) {
         await chrome.storage.local.set({
             [ tab.id ]: {
@@ -132,8 +140,4 @@ async function updateLocalTabStorage(tab, on, amplitudeLimit) {
             }
         });
     }
-}
-
-async function updateTableValues() {
-    
 }

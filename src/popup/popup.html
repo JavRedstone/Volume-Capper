@@ -6,19 +6,14 @@
     <body>
         <div id = "header">
             <img id = "icon" src = "./../assets/icons/amplitude_controller_icon.svg">
-            <span id = "name">Amplitude Controller</span>
+            <span id = "title">Amplitude Controller</span>
             <label id = "switch">
                 <input id = "switch-checkbox" type = "checkbox">
-                <span id = "switch-slider"></span>
+                <span id = "slider"></span>
             </label>
         </div>
         <div id = "content">
-            <p id = "description">This extension controls the amplitude of volume when a sound is played on a tab. It reduces the peaks of sound greater than the selected value to diminish loud sounds while keeping soft sounds still audible. Good for school environments when playing music out loud.</p>
-            <p id = "canvas-label" align = "center">Frequency (Hz) vs. Volume (dB)</p>
-            <canvas id = "canvas" width = "360" height = "180"></canvas>
-        </div>
-        <div id = "footer">
-            <input id = "slider" type = "range" min = "0" max = "130">
+
         </div>
     </body>
     <script src = "./popup.js"></script>
