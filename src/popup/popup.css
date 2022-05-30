@@ -10,13 +10,18 @@
 }
 
 body {
-    width: 400px;
-    height: 200px;
+    width: 300px;
+    height: 150px;
+
+    margin: 0;
+    margin-top: 5px;
 }
 
 #header {
     width: 100%;
     height: 25px;
+
+    position: fixed;
 
     border-bottom: 2px solid var(--blue-100);
 }
@@ -24,7 +29,8 @@ body {
 #icon {
     height: 20px;
 
-    margin: 2.5px;
+    margin-left: 10px;
+    margin-right: 5px;
 }
 
 #title {
@@ -43,13 +49,14 @@ body {
     margin-top: 2px;
 }
 
-#switch input { 
-    opacity: 0;
+#switch input {
     width: 0;
     height: 0;
+
+    opacity: 0;
 }
 
-#slider {
+#switch-slider {
     position: absolute;
     top: 0;
     left: 0;
@@ -65,7 +72,7 @@ body {
     transition: 0.1s;
 }
 
-#slider:before {
+#switch-slider:before {
     position: absolute;
     
     height: 16px;
@@ -75,7 +82,7 @@ body {
 
     background-color: var(--blue-100);
 
-    border-radius: 10px;
+    border-radius: 100%;
 
     color: #fff;
     line-height: 16px;
@@ -87,16 +94,105 @@ body {
     transition: 0.1s;
 }
 
-#switch-checkbox:checked + #slider {
+#switch-checkbox:checked + #switch-slider {
     background-color: var(--blue-50);
 }
 
-#switch-checkbox:checked + #slider:before {
+#switch-checkbox:checked + #switch-slider:before {
     transform: translateX(10px);
 
     content: "ON";
 }
 
 #content {
-    
+    width: 100%;
+
+    position: fixed;
+    margin-top: 35px;
+}
+
+#slider {
+    -webkit-appearance: none;
+
+    width: 90%;
+    height: 5px;
+
+    margin-left: 50%;
+    transform: translate(-50%);
+
+    background-color: var(--blue-25);
+
+    border-radius: 2.5px;
+
+    outline: none;
+
+    opacity: 1;
+
+    transition: opacity 0.1;
+}
+
+#slider:disabled {
+    opacity: 0.5;
+}
+
+#slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+
+    appearance: none;
+
+    width: 20px;
+    height: 20px;
+
+    background-color: var(--blue-100);
+
+    border-radius: 100%;
+
+    cursor: pointer;
+}
+
+#min {
+    position: absolute;
+    margin-left: 10px;
+    margin-top: 5px;
+}
+
+#max {
+    position: absolute;
+    right: 10px;
+    margin-top: 5px;
+}
+
+#volume-cap-text {
+    font-size: 15px;
+    font-weight: bold;
+}
+
+#hide-show-graph {
+    height: 20px;
+
+    background-color: transparent;
+
+    border: 1px solid var(--blue-100);
+    border-radius: 10px;
+
+    outline: none;
+
+    opacity: 1;
+
+    color: var(--blue-100);
+
+    cursor: pointer;
+
+    transition: all 0.1s;
+    transition-property: background-color, color, opacity;
+}
+
+#hide-show-graph:hover {
+    background-color: var(--blue-100);
+
+    color: #fff;
+}
+
+#hide-show-graph:disabled {
+    opacity: 0.5;
 }

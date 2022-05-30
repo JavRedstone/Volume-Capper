@@ -14,7 +14,7 @@ chrome.runtime.onInstalled.addListener(
     async ( details ) => {
         let logPrinting = setInterval(printLog, 1000);
         await clearLocalStorage();
-        let message = 'Amplitude Controller was successfully installed.';
+        let message = 'Volume Capper was successfully installed.';
         for (let detail in details) {
             message += `\n${detail}: ${details[detail]}`;
         }
@@ -85,7 +85,7 @@ async function setTabBadge(tabId) {
     let tabVariables = keys[tabId];
     let text = '';
     if (tabVariables != undefined && tabVariables.on) {
-        text = `${tabVariables.amplitudeLimit}`;
+        text = `${tabVariables.volumeCap}`;
     }
     chrome.action.setBadgeText({ text: text });
     await createLogMessage(`Set badge text of tab ${tabId} to ${text}`);

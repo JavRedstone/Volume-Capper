@@ -4,17 +4,21 @@
  */
 
 /* Constants */
-let MAX_AMPLITUDE_LIMIT = 130;
+let MAX_VOLUME_CAP = 130;
 
 /* Global Variables */
 let _tab = null;
 let _on = false;
-let _amplitudeLimit = MAX_AMPLITUDE_LIMIT;
+let _volumeCap = MAX_VOLUME_CAP;
+let _hiddenGraph = false;
 
 /* DOM Elements */
 
 let switchCheckbox = document.getElementById('switch-checkbox');
 let slider = document.getElementById('slider');
+let max = document.getElementById('max');
+let volumeCapText = document.getElementById('volume-cap-text');
+let hideShowGraph = document.getElementById('hide-show-graph');
 
 /* Event Listeners */
 
@@ -25,17 +29,24 @@ let slider = document.getElementById('slider');
  */
 window.addEventListener('load',
     async ( ev ) => {
+        slider.max = MAX_VOLUME_CAP;
+        slider.value = MAX_VOLUME_CAP;
+        max.innerHTML = `${MAX_VOLUME_CAP} dB`;
         _tab = await getCurrentTab();
         let tabVariables = await getLocalTabStorage(_tab.id);
         if (tabVariables != undefined) {
             if (tabVariables.on != null) {
                 _on = tabVariables.on;
             }
-            if (tabVariables.amplitudeLimit != null) {
-                _amplitudeLimit = tabVariables.amplitudeLimit;
+            if (tabVariables.volumeCap != null) {
+                _volumeCap = tabVariables.volumeCap;
+            }
+            if (tabVariables.hiddenGraph != null) {
+                _hiddenGraph = tabVariables.hiddenGraph;
             }
         }
-        await displayVariables(_on, _amplitudeLimit);
+        displayTabVariables(_on, _volumeCap, _hiddenGraph);
+        await controlMediaStream(_on);
     }
 );
 
@@ -47,8 +58,10 @@ window.addEventListener('load',
 switchCheckbox.addEventListener('change',
     async ( ev ) => {
         _on = !_on;
-        await updateLocalTabStorage(_tab, _on, _amplitudeLimit);
+        displayTabVariables(_on, _volumeCap, _hiddenGraph);
+        await updateLocalTabStorage(_tab, _on, _volumeCap);
         await setTabBadge(_tab.id);
+        await controlMediaStream(_on);
     }
 );
 
@@ -59,9 +72,18 @@ switchCheckbox.addEventListener('change',
  */
 slider.addEventListener('input',
     async ( ev ) => {
-        _amplitudeLimit = parseInt(slider.value);
-        await updateLocalTabStorage(_tab, _on, _amplitudeLimit);
+        _volumeCap = parseInt(slider.value);
+        displayTabVariables(_on, _volumeCap, _hiddenGraph);
+        await updateLocalTabStorage(_tab, _on, _volumeCap);
         await setTabBadge(_tab.id);
+    }
+);
+
+hideShowGraph.addEventListener('click',
+    async ( ev ) => {
+        _hiddenGraph = !_hiddenGraph;
+        displayTabVariables(_on, _volumeCap, _hiddenGraph);
+        await updateLocalTabStorage(_tab, _on, _volumeCap);
     }
 );
 
@@ -70,6 +92,8 @@ slider.addEventListener('input',
 /**
  * Returns the current tab that the user is active in
  * 
+ * @async
+ * @function getCurrentTab
  * @returns { Tab }
  */
 async function getCurrentTab() {
@@ -83,6 +107,8 @@ async function getCurrentTab() {
 /**
  * Returns the local tab storage object when given a tab id
  * 
+ * @async
+ * @function getLocalTabStorage
  * @param { number } tabId 
  * @returns { Object }
  */
@@ -92,15 +118,22 @@ async function getLocalTabStorage(tabId) {
 }
 
 /**
- * Updates the switch checkbox and the slider with the given variable values
+ * Displays the tab variables in the chrome extension window
  * 
- * @function displayVariables
+ * @function displayTabVariables
  * @param { boolean } on 
- * @param { number } amplitudeLimit 
+ * @param { number } volumeCap 
  */
-function displayVariables(on, amplitudeLimit) {
+function displayTabVariables(on, volumeCap, hiddenGraph) {
     switchCheckbox.checked = on;
-    slider.value = amplitudeLimit;
+
+    slider.value = volumeCap;
+    slider.disabled = !on;
+
+    volumeCapText.innerHTML = on ? `${volumeCap} dB` : '';
+
+    hideShowGraph.innerHTML = hiddenGraph ? 'Show amplitude graph' : 'Hide amplitude graph';
+    hideShowGraph.disabled = !on;
 }
 
 /**
@@ -114,10 +147,9 @@ async function setTabBadge(tabId) {
     let tabVariables = await getLocalTabStorage(tabId);
     let text = '';
     if (tabVariables != undefined && tabVariables.on) {
-        text = `${tabVariables.amplitudeLimit}`;
+        text = `${tabVariables.volumeCap}`;
     }
-    chrome.action.setBadgeText({ text: text });
-    await createLogMessage(`Set badge text of tab ${tabId} to ${text}`);
+    await chrome.action.setBadgeText({ text: text });
 }
 
 /**
@@ -127,17 +159,70 @@ async function setTabBadge(tabId) {
  * @function updateLocalTabStorage
  * @param { Tab } tab 
  * @param { boolean } on 
- * @param { number } amplitudeLimit 
+ * @param { number } volumeCap 
  */
-async function updateLocalTabStorage(tab, on, amplitudeLimit) {
-    console.log(tab, on, amplitudeLimit)
+async function updateLocalTabStorage(tab, on, volumeCap, hideGraph) {
     if (tab != null) {
         await chrome.storage.local.set({
             [ tab.id ]: {
                 tab: tab,
                 on: on,
-                amplitudeLimit: amplitudeLimit
+                volumeCap: volumeCap,
+                hideGraph: hideGraph
             }
         });
     }
+}
+
+/**
+ * Controls the media stream status
+ * 
+ * @async
+ * @function
+ * @param { boolean } on 
+ */
+async function controlMediaStream(on) {
+    if (on) {
+        await sendMediaStreamId();
+    }
+    else {
+        await stopMediaStream();
+    }
+}
+
+/**
+ * Sends the current media stream id to the sevice worker
+ * 
+ * @async
+ * @function sendMediaStreamId
+ */
+async function sendMediaStreamId() {
+    let tab = await getCurrentTab();
+    chrome.tabCapture.getMediaStreamId({
+        consumerTabId: tab.id
+    },
+        ( streamId ) => {
+            chrome.tabs.sendMessage(tab.id, {
+                command: 'tab-media-stream',
+                streamId: streamId
+            },
+                ( response ) => { }
+            );
+        }
+    );
+}
+
+/**
+ * Stops the media stream
+ * 
+ * @async
+ * @function stopMediaStream
+ */
+async function stopMediaStream() {
+    let tab = await getCurrentTab();
+    chrome.tabs.sendMessage(tab.id, {
+        command: 'stop-media-stream'
+    },
+        ( response ) => { }
+    );
 }

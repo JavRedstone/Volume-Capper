@@ -5,15 +5,21 @@
     </head>
     <body>
         <div id = "header">
-            <img id = "icon" src = "./../assets/icons/amplitude_controller_icon.svg">
-            <span id = "title">Amplitude Controller</span>
+            <img id = "icon" src = "./../assets/icons/volume_capper_icon.svg">
+            <span id = "title">Volume Capper</span>
             <label id = "switch">
                 <input id = "switch-checkbox" type = "checkbox">
-                <span id = "slider"></span>
+                <span id = "switch-slider"></span>
             </label>
         </div>
         <div id = "content">
-
+            <input id = "slider" type = "range" min = "0"">
+            <span id = "min">0 dB</span>
+            <span id = "max"></span>
+            <p id = "volume-cap-text" align = "center"></p>
+            <p align = "center">
+                <button id = "hide-show-graph"></button>
+            </p>
         </div>
     </body>
     <script src = "./popup.js"></script>
