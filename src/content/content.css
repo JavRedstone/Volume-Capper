@@ -1,0 +1,19 @@
+:root {
+    --blue-100: #4285F4;
+    --blue-75: #4285F4BF;
+    --blue-50: #4285F480;
+    --blue-25: #4285F440;
+}
+
+.volume-capper-visual {
+    width: 200px;
+    height: 75px;
+    
+    position: fixed;
+    margin-left: 10px;
+    bottom: 10px;
+    
+    background-color: #00000080;
+    
+    border: 2px solid var(--blue-100);
+}
