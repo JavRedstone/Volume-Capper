@@ -4,11 +4,16 @@
  */
 
 /* Global Variables */
-let _stream = null;
-let _streamElements = null;
+let _mediaStream = null;
+let _mediaStreamElements = null;
 
 /* Event Listeners */
 
+/**
+ * Listens for a message from popup
+ * 
+ * @listens
+ */
 chrome.runtime.onMessage.addListener(
     async (message, sender, sendResponse) => {
         console.log(message.command)
@@ -29,13 +34,16 @@ chrome.runtime.onMessage.addListener(
 async function handleMessage(message) {
     switch (message.command) {
         case 'tab-media-stream':
-            if (_stream == null) {
-                let stream = await getMediaStream(message.streamId);
+            if (_mediaStream == null) {
+                _mediaStream = await getMediaStream(message.mediaStreamId);
             }
-            _streamElements = getStreamElements(_stream);
+            _mediaStreamElements = getMediaStreamElements(_mediaStream);
             break;
         case 'stop-media-stream':
-            stopMediaStream(_stream, _streamElements);
+            console.log(_mediaStream)
+            if (_mediaStream != null) {
+                stopMediaStream(_mediaStream, _mediaStreamElements);
+            }
             break;
     }
 }
@@ -62,9 +70,8 @@ async function getLocalTabStorage(tabId) {
  * @returns { MediaStream }
  */
 async function getMediaStream(streamId) {
-    let stream = await navigator.mediaDevices.getUserMedia({
+    return await navigator.mediaDevices.getUserMedia({
         video: false,
-        audio: true,
         audio: {
             mandatory: {
                 chromeMediaSource: 'tab',
@@ -72,22 +79,23 @@ async function getMediaStream(streamId) {
             }
         }
     });
-    return stream;
 }
 
 /**
- * Gets the stream elements from a given stream
+ * Gets the media stream elements from a given media stream
  * 
- * @function getStreamElements
- * @param { MediaStream } stream 
+ * @function getMediaStreamElements
+ * @param { MediaStream } mediaStream 
  * @returns { Object }
  */
-function getStreamElements(stream) {
+function getMediaStreamElements(mediaStream) {
     let audioContext = new AudioContext({
         latencyHint: 'interactive',
         sampleRate: 44100
     });
-    let streamSource = audioContext.createMediaStreamSource(stream);
+    let mediaStreamAudioSourceNode = new MediaStreamAudioSourceNode(audioContext, {
+        mediaStream: mediaStream
+    });
     let analyserNode = new AnalyserNode(audioContext, {
         fftSize: 2048,
         minDecibels: -130,
@@ -95,20 +103,28 @@ function getStreamElements(stream) {
     });
     let gainNode = audioContext.createGain();
     let dataArray = new Uint8Array(analyserNode.frequencyBinCount);
-    streamSource.connect(analyserNode);
-    streamSource.connect(gainNode);
-    streamSource.connect(audioContext.destination);
+    mediaStreamAudioSourceNode.connect(analyserNode);
+    mediaStreamAudioSourceNode.connect(gainNode);
+    mediaStreamAudioSourceNode.connect(audioContext.destination);
+    
     analyserNode.connect(audioContext.destination);
+    
     gainNode.connect(audioContext.destination);
     return {
         audioContext,
-        streamSource,
+        mediaStreamAudioSourceNode,
         analyserNode,
         gainNode,
         dataArray
     };
 }
 
+/**
+ * Draws the visual on the tab page
+ * 
+ * @param { AnalyserNode } analyserNode 
+ * @param { Uint8Array } dataArray 
+ */
 function drawVisual(analyserNode, dataArray) {
     requestAnimationFrame(drawVisual(analyserNode, dataArray));
 
@@ -120,15 +136,14 @@ function drawVisual(analyserNode, dataArray) {
 /**
  * Stops the current running media stream
  * 
- * @param { MediaStream } stream 
- * @param { Object } streamElements 
+ * @function
  */
- function stopMediaStream(stream, streamElements) {
-    for (let audioTrack of stream.getAudioTracks()) {
+ function stopMediaStream() {
+    for (let audioTrack of _mediaStream.getAudioTracks()) {
         audioTrack.stop();
     }
-    streamElements.audioContext.close();
+    _mediaStreamElements.audioContext.close();
     
-    stream = null;
-    streamElements = null;
+    _mediaStream = null;
+    _mediaStreamElements = null;
 }

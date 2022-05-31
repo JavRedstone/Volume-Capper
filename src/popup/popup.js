@@ -212,7 +212,7 @@ async function sendMediaStreamId(tab) {
         ( streamId ) => {
             chrome.tabs.sendMessage(tab.id, {
                 command: 'tab-media-stream',
-                streamId: streamId
+                mediaStreamId: streamId
             });
         }
     );
