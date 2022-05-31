@@ -33,20 +33,9 @@ window.addEventListener('load',
         slider.value = MAX_VOLUME_CAP;
         max.innerHTML = `${MAX_VOLUME_CAP} dB`;
         _tab = await getCurrentTab();
-        let tabVariables = await getLocalTabStorage(_tab.id);
-        if (tabVariables != undefined) {
-            if (tabVariables.on != null) {
-                _on = tabVariables.on;
-            }
-            if (tabVariables.volumeCap != null) {
-                _volumeCap = tabVariables.volumeCap;
-            }
-            if (tabVariables.hiddenGraph != null) {
-                _hiddenGraph = tabVariables.hiddenGraph;
-            }
-        }
+        await setTabVariables(_tab.id);
         displayTabVariables(_on, _volumeCap, _hiddenGraph);
-        await controlMediaStream(_on);
+        await controlMediaStream(_tab, _on);
     }
 );
 
@@ -61,7 +50,7 @@ switchCheckbox.addEventListener('change',
         displayTabVariables(_on, _volumeCap, _hiddenGraph);
         await updateLocalTabStorage(_tab, _on, _volumeCap);
         await setTabBadge(_tab.id);
-        await controlMediaStream(_on);
+        await controlMediaStream(_tab, _on);
     }
 );
 
@@ -115,6 +104,26 @@ async function getCurrentTab() {
 async function getLocalTabStorage(tabId) {
     let keys = await chrome.storage.local.get(tabId);
     return keys[tabId];
+}
+
+/**
+ * Sets up the tab variables
+ * 
+ * @param { tabId } tabId
+ */
+async function setTabVariables(tabId) {
+    let tabVariables = await getLocalTabStorage(_tab.id);
+    if (tabVariables != undefined) {
+        if (tabVariables.on != null) {
+            _on = tabVariables.on;
+        }
+        if (tabVariables.volumeCap != null) {
+            _volumeCap = tabVariables.volumeCap;
+        }
+        if (tabVariables.hiddenGraph != null) {
+            _hiddenGraph = tabVariables.hiddenGraph;
+        }
+    }
 }
 
 /**
@@ -181,12 +190,12 @@ async function updateLocalTabStorage(tab, on, volumeCap, hideGraph) {
  * @function
  * @param { boolean } on 
  */
-async function controlMediaStream(on) {
+async function controlMediaStream(tab, on) {
     if (on) {
-        await sendMediaStreamId();
+        await sendMediaStreamId(tab);
     }
     else {
-        await stopMediaStream();
+        stopMediaStream(tab);
     }
 }
 
@@ -196,8 +205,7 @@ async function controlMediaStream(on) {
  * @async
  * @function sendMediaStreamId
  */
-async function sendMediaStreamId() {
-    let tab = await getCurrentTab();
+async function sendMediaStreamId(tab) {
     chrome.tabCapture.getMediaStreamId({
         consumerTabId: tab.id
     },
@@ -205,9 +213,7 @@ async function sendMediaStreamId() {
             chrome.tabs.sendMessage(tab.id, {
                 command: 'tab-media-stream',
                 streamId: streamId
-            },
-                ( response ) => { }
-            );
+            });
         }
     );
 }
@@ -218,11 +224,8 @@ async function sendMediaStreamId() {
  * @async
  * @function stopMediaStream
  */
-async function stopMediaStream() {
-    let tab = await getCurrentTab();
+function stopMediaStream(tab) {
     chrome.tabs.sendMessage(tab.id, {
         command: 'stop-media-stream'
-    },
-        ( response ) => { }
-    );
+    });
 }

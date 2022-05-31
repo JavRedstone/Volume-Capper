@@ -9,30 +9,29 @@ let _streamElements = null;
 
 /* Event Listeners */
 
-/**
- * Listens for messages coming from popup
- * 
- * @listens
- */
 chrome.runtime.onMessage.addListener(
-    (message, sender, sendResponse) => {
+    async (message, sender, sendResponse) => {
+        console.log(message.command)
         handleMessage(message);
-        sendResponse({});
-        return true;
     }
 );
 
 /* Functions */
 
 /**
+ * Handles the message provided
  * 
- * @param {  } tabId 
+ * @async
+ * @function
+ * @param { Object } message 
  * @returns 
  */
-function handleMessage() {
+async function handleMessage(message) {
     switch (message.command) {
         case 'tab-media-stream':
-            _stream = getMediaStream(message.streamId);
+            if (_stream == null) {
+                let stream = await getMediaStream(message.streamId);
+            }
             _streamElements = getStreamElements(_stream);
             break;
         case 'stop-media-stream':
@@ -110,13 +109,21 @@ function getStreamElements(stream) {
     };
 }
 
+function drawVisual(analyserNode, dataArray) {
+    requestAnimationFrame(drawVisual(analyserNode, dataArray));
+
+    analyserNode.getByteFrequencyData(dataArray);
+
+    console.log(dataArray)
+}
+
 /**
  * Stops the current running media stream
  * 
  * @param { MediaStream } stream 
  * @param { Object } streamElements 
  */
-function stopMediaStream(stream, streamElements) {
+ function stopMediaStream(stream, streamElements) {
     for (let audioTrack of stream.getAudioTracks()) {
         audioTrack.stop();
     }
@@ -124,12 +131,4 @@ function stopMediaStream(stream, streamElements) {
     
     stream = null;
     streamElements = null;
-}
-
-function drawVisual(analyserNode, dataArray) {
-    requestAnimationFrame(drawVisual(analyserNode, dataArray));
-
-    analyserNode.getByteFrequencyData(dataArray);
-
-    console.log(dataArray)
 }
