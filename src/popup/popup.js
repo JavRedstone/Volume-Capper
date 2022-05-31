@@ -10,7 +10,7 @@ let MAX_VOLUME_CAP = 130;
 let _tab = null;
 let _on = false;
 let _volumeCap = MAX_VOLUME_CAP;
-let _hiddenGraph = false;
+let _hiddenVisual = false;
 
 /* DOM Elements */
 
@@ -34,8 +34,9 @@ window.addEventListener('load',
         max.innerHTML = `${MAX_VOLUME_CAP} dB`;
         _tab = await getCurrentTab();
         await setTabVariables(_tab.id);
-        displayTabVariables(_on, _volumeCap, _hiddenGraph);
+        displayTabVariables(_on, _volumeCap, _hiddenVisual);
         await controlMediaStream(_tab, _on);
+        sendShowHideVisual(_tab, _hiddenVisual);
     }
 );
 
@@ -47,7 +48,7 @@ window.addEventListener('load',
 switchCheckbox.addEventListener('change',
     async ( ev ) => {
         _on = !_on;
-        displayTabVariables(_on, _volumeCap, _hiddenGraph);
+        displayTabVariables(_on, _volumeCap, _hiddenVisual);
         await updateLocalTabStorage(_tab, _on, _volumeCap);
         await setTabBadge(_tab.id);
         await controlMediaStream(_tab, _on);
@@ -62,7 +63,7 @@ switchCheckbox.addEventListener('change',
 slider.addEventListener('input',
     async ( ev ) => {
         _volumeCap = parseInt(slider.value);
-        displayTabVariables(_on, _volumeCap, _hiddenGraph);
+        displayTabVariables(_on, _volumeCap, _hiddenVisual);
         await updateLocalTabStorage(_tab, _on, _volumeCap);
         await setTabBadge(_tab.id);
     }
@@ -70,9 +71,10 @@ slider.addEventListener('input',
 
 hideShowGraph.addEventListener('click',
     async ( ev ) => {
-        _hiddenGraph = !_hiddenGraph;
-        displayTabVariables(_on, _volumeCap, _hiddenGraph);
+        _hiddenVisual = !_hiddenVisual;
+        displayTabVariables(_on, _volumeCap, _hiddenVisual);
         await updateLocalTabStorage(_tab, _on, _volumeCap);
+        sendShowHideVisual(_tab, _hiddenVisual);
     }
 );
 
@@ -120,8 +122,8 @@ async function setTabVariables(tabId) {
         if (tabVariables.volumeCap != null) {
             _volumeCap = tabVariables.volumeCap;
         }
-        if (tabVariables.hiddenGraph != null) {
-            _hiddenGraph = tabVariables.hiddenGraph;
+        if (tabVariables.hiddenVisual != null) {
+            _hiddenVisual = tabVariables.hiddenVisual;
         }
     }
 }
@@ -133,7 +135,7 @@ async function setTabVariables(tabId) {
  * @param { boolean } on 
  * @param { number } volumeCap 
  */
-function displayTabVariables(on, volumeCap, hiddenGraph) {
+function displayTabVariables(on, volumeCap, hiddenVisual) {
     switchCheckbox.checked = on;
 
     slider.value = volumeCap;
@@ -141,7 +143,7 @@ function displayTabVariables(on, volumeCap, hiddenGraph) {
 
     volumeCapText.innerHTML = on ? `${volumeCap} dB` : '';
 
-    hideShowGraph.innerHTML = hiddenGraph ? 'Show amplitude graph' : 'Hide amplitude graph';
+    hideShowGraph.innerHTML = hiddenVisual ? 'Show amplitude graph' : 'Hide amplitude graph';
     hideShowGraph.disabled = !on;
 }
 
@@ -195,7 +197,7 @@ async function controlMediaStream(tab, on) {
         await sendMediaStreamId(tab);
     }
     else {
-        stopMediaStream(tab);
+        sendStopMediaStream(tab);
     }
 }
 
@@ -222,10 +224,17 @@ async function sendMediaStreamId(tab) {
  * Stops the media stream
  * 
  * @async
- * @function stopMediaStream
+ * @function sendStopMediaStream
  */
-function stopMediaStream(tab) {
+function sendStopMediaStream(tab) {
     chrome.tabs.sendMessage(tab.id, {
         command: 'stop-media-stream'
+    });
+}
+
+function sendShowHideVisual(tab, hiddenVisual) {
+    chrome.tabs.sendMessage(tab.id, {
+        command: 'show-hide-visual',
+        hiddenVisual: hiddenVisual
     });
 }
