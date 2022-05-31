@@ -4,8 +4,14 @@
  */
 
 /* Global Variables */
+
 let _mediaStream = null;
 let _mediaStreamElements = null;
+let _visualAnimationFrame = null;
+
+/* HTML Elements */
+
+let _visual = null;
 
 /* Event Listeners */
 
@@ -27,9 +33,8 @@ chrome.runtime.onMessage.addListener(
  * Handles the message provided
  * 
  * @async
- * @function
+ * @function handleMessage
  * @param { Object } message 
- * @returns 
  */
 async function handleMessage(message) {
     switch (message.command) {
@@ -43,6 +48,23 @@ async function handleMessage(message) {
             console.log(_mediaStream)
             if (_mediaStream != null) {
                 stopMediaStream(_mediaStream, _mediaStreamElements);
+            }
+            break;
+        case 'show-hide-visual':
+            if (message.hiddenVisual) {
+                cancelAnimationFrame(_visualAnimationFrame);
+                let visuals = document.getElementsByClassName('volume-capper-visual');
+                for (let i = 0; i < visuals.length; i++) {
+                    visuals[i].remove();
+                }
+            }
+            else {
+                _visual = document.createElement('canvas');
+                _visual.setAttribute('class', `volume-capper-visual`);
+                document.body.appendChild(_visual);
+                if (_mediaStreamElements != null) {
+                    drawVisual(_visual, _mediaStreamElements.analyserNode, _mediaStreamElements.dataArray);   
+                }
             }
             break;
     }
@@ -122,21 +144,44 @@ function getMediaStreamElements(mediaStream) {
 /**
  * Draws the visual on the tab page
  * 
+ * @function drawVisual
  * @param { AnalyserNode } analyserNode 
  * @param { Uint8Array } dataArray 
  */
-function drawVisual(analyserNode, dataArray) {
-    requestAnimationFrame(drawVisual(analyserNode, dataArray));
-
+function drawVisual(visual, analyserNode, dataArray) {
+    let _visualAnimationFrame = requestAnimationFrame(
+        () => {
+            drawVisual(visual, analyserNode, dataArray);
+        }
+    );
+    
+    let visualCtx = visual.getContext('2d');
+    visualCtx.clearRect(0, 0, visual.width, visual.height);
+    
     analyserNode.getByteFrequencyData(dataArray);
+    let average = findVolumeAverage(dataArray);
+    let barWidth = visual.width / dataArray.length;
+}
 
-    console.log(dataArray)
+/**
+ * Finds the average of the volumes when given a data array
+ * 
+ * @function findVolumeAverage
+ * @param { Uint8Array } dataArray
+ * @returns { Uint8Array }
+ */
+function findVolumeAverage(dataArray) {
+    let sum = 0;
+    for (let volume of dataArray) {
+        sum += volume;
+    }
+    return sum / dataArray.length;
 }
 
 /**
  * Stops the current running media stream
  * 
- * @function
+ * @function stopMediaStream
  */
  function stopMediaStream() {
     for (let audioTrack of _mediaStream.getAudioTracks()) {
