@@ -5,15 +5,18 @@
     --blue-25: #4285F440;
 }
 
-.volume-capper-visual {
-    width: 200px;
+#volume-capper-visual {
+    width: 250px;
     height: 75px;
     
     position: fixed;
     margin-left: 10px;
     bottom: 10px;
     
-    background-color: #00000080;
+    z-index: 1000;
+    
+    background-color: var(--blue-25);
     
     border: 2px solid var(--blue-100);
+    border-radius: 5px;
 }

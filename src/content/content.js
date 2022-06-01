@@ -12,6 +12,7 @@ let _visualAnimationFrame = null;
 /* HTML Elements */
 
 let _visual = null;
+let _visualCtx = null;
 
 /* Event Listeners */
 
@@ -22,7 +23,6 @@ let _visual = null;
  */
 chrome.runtime.onMessage.addListener(
     async (message, sender, sendResponse) => {
-        console.log(message.command)
         handleMessage(message);
     }
 );
@@ -45,26 +45,23 @@ async function handleMessage(message) {
             _mediaStreamElements = getMediaStreamElements(_mediaStream);
             break;
         case 'stop-media-stream':
-            console.log(_mediaStream)
             if (_mediaStream != null) {
                 stopMediaStream(_mediaStream, _mediaStreamElements);
             }
             break;
         case 'show-hide-visual':
+            if (_visual != null) {
+                _visual.remove();
+            }
             if (message.hiddenVisual) {
                 cancelAnimationFrame(_visualAnimationFrame);
-                let visuals = document.getElementsByClassName('volume-capper-visual');
-                for (let i = 0; i < visuals.length; i++) {
-                    visuals[i].remove();
-                }
             }
             else {
                 _visual = document.createElement('canvas');
-                _visual.setAttribute('class', `volume-capper-visual`);
+                _visual.setAttribute('id', 'volume-capper-visual');
                 document.body.appendChild(_visual);
-                if (_mediaStreamElements != null) {
-                    drawVisual(_visual, _mediaStreamElements.analyserNode, _mediaStreamElements.dataArray);   
-                }
+                _visualCtx = _visual.getContext('2d');
+                checkMediaStreamElementsAvailability();
             }
             break;
     }
@@ -119,11 +116,13 @@ function getMediaStreamElements(mediaStream) {
         mediaStream: mediaStream
     });
     let analyserNode = new AnalyserNode(audioContext, {
-        fftSize: 2048,
+        fftSize: 512,
         minDecibels: -130,
         maxDecibels: 0
     });
-    let gainNode = audioContext.createGain();
+    let gainNode = new GainNode(audioContext, {
+        gain: 0
+    });
     let dataArray = new Uint8Array(analyserNode.frequencyBinCount);
     mediaStreamAudioSourceNode.connect(analyserNode);
     mediaStreamAudioSourceNode.connect(gainNode);
@@ -141,6 +140,19 @@ function getMediaStreamElements(mediaStream) {
     };
 }
 
+function checkMediaStreamElementsAvailability() {
+    setTimeout(
+        () => {
+            if (_mediaStreamElements != null) {
+                drawVisual(_visual, _visualCtx, _mediaStreamElements.analyserNode, _mediaStreamElements.dataArray);   
+            }
+            else {
+                checkMediaStreamElementsAvailability();
+            }
+        }
+    )
+}
+
 /**
  * Draws the visual on the tab page
  * 
@@ -148,19 +160,25 @@ function getMediaStreamElements(mediaStream) {
  * @param { AnalyserNode } analyserNode 
  * @param { Uint8Array } dataArray 
  */
-function drawVisual(visual, analyserNode, dataArray) {
+function drawVisual(visual, visualCtx, analyserNode, dataArray) {
     let _visualAnimationFrame = requestAnimationFrame(
         () => {
-            drawVisual(visual, analyserNode, dataArray);
+            drawVisual(visual, visualCtx, analyserNode, dataArray);
         }
     );
-    
-    let visualCtx = visual.getContext('2d');
     visualCtx.clearRect(0, 0, visual.width, visual.height);
     
     analyserNode.getByteFrequencyData(dataArray);
     let average = findVolumeAverage(dataArray);
-    let barWidth = visual.width / dataArray.length;
+    let barWidth = visual.width / dataArray.length * 1.5;
+    let x = 0;
+    for (let volume of dataArray) {
+        let barHeight = volume * visual.height / 255;
+        visualCtx.fillStyle = '#ffffff80';
+        visualCtx.fillRect(x, visual.height - barHeight, barWidth, barHeight);
+        
+        x += barWidth;
+    }
 }
 
 /**

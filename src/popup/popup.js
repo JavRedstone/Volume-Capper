@@ -144,7 +144,6 @@ function displayTabVariables(on, volumeCap, hiddenVisual) {
     volumeCapText.innerHTML = on ? `${volumeCap} dB` : '';
 
     hideShowGraph.innerHTML = hiddenVisual ? 'Show amplitude graph' : 'Hide amplitude graph';
-    hideShowGraph.disabled = !on;
 }
 
 /**
