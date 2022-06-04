@@ -36,7 +36,6 @@ window.addEventListener('load',
         await setTabVariables(_tab.id);
         displayTabVariables(_on, _volumeCap, _hiddenVisual);
         await controlMediaStream(_tab, _on);
-        sendShowHideVisual(_tab, _hiddenVisual);
     }
 );
 
@@ -48,10 +47,12 @@ window.addEventListener('load',
 switchCheckbox.addEventListener('change',
     async ( ev ) => {
         _on = !_on;
+        _hiddenVisual = !_on;
         displayTabVariables(_on, _volumeCap, _hiddenVisual);
         await updateLocalTabStorage(_tab, _on, _volumeCap);
         await setTabBadge(_tab.id);
         await controlMediaStream(_tab, _on);
+        sendShowHideVisual(_tab, _hiddenVisual);
     }
 );
 

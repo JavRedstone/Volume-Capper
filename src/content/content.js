@@ -116,12 +116,12 @@ function getMediaStreamElements(mediaStream) {
         mediaStream: mediaStream
     });
     let analyserNode = new AnalyserNode(audioContext, {
-        fftSize: 512,
+        fftSize: 1024,
         minDecibels: -130,
         maxDecibels: 0
     });
     let gainNode = new GainNode(audioContext, {
-        gain: 0
+        gain: -2
     });
     let dataArray = new Uint8Array(analyserNode.frequencyBinCount);
     mediaStreamAudioSourceNode.connect(analyserNode);
@@ -170,14 +170,14 @@ function drawVisual(visual, visualCtx, analyserNode, dataArray) {
     
     analyserNode.getByteFrequencyData(dataArray);
     let average = findVolumeAverage(dataArray);
-    let barWidth = visual.width / dataArray.length * 1.5;
+    let barWidth = visual.width / dataArray.length * 1.5 * 2;
     let x = 0;
     for (let volume of dataArray) {
         let barHeight = volume * visual.height / 255;
-        visualCtx.fillStyle = '#ffffff80';
+        visualCtx.fillStyle = '#4285F4';
         visualCtx.fillRect(x, visual.height - barHeight, barWidth, barHeight);
         
-        x += barWidth;
+        x += barWidth - 1;
     }
 }
 
