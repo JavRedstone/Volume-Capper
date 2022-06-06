@@ -167,7 +167,7 @@ body {
     font-weight: bold;
 }
 
-#hide-show-graph {
+#show-hide-visual {
     height: 20px;
 
     background-color: transparent;
@@ -187,12 +187,12 @@ body {
     transition-property: background-color, color, opacity;
 }
 
-#hide-show-graph:hover {
+#show-hide-visual:hover {
     background-color: var(--blue-100);
 
     color: #fff;
 }
 
-#hide-show-graph:disabled {
+#show-hide-visual:disabled {
     opacity: 0.5;
 }

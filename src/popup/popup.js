@@ -4,7 +4,8 @@
  */
 
 /* Constants */
-let MAX_VOLUME_CAP = 130;
+
+const MAX_VOLUME_CAP = 130;
 
 /* Global Variables */
 let _tab = null;
@@ -18,7 +19,7 @@ let switchCheckbox = document.getElementById('switch-checkbox');
 let slider = document.getElementById('slider');
 let max = document.getElementById('max');
 let volumeCapText = document.getElementById('volume-cap-text');
-let hideShowGraph = document.getElementById('hide-show-graph');
+let showHideVisual = document.getElementById('show-hide-visual');
 
 /* Event Listeners */
 
@@ -70,7 +71,7 @@ slider.addEventListener('input',
     }
 );
 
-hideShowGraph.addEventListener('click',
+showHideVisual.addEventListener('click',
     async ( ev ) => {
         _hiddenVisual = !_hiddenVisual;
         displayTabVariables(_on, _volumeCap, _hiddenVisual);
@@ -144,7 +145,7 @@ function displayTabVariables(on, volumeCap, hiddenVisual) {
 
     volumeCapText.innerHTML = on ? `${volumeCap} dB` : '';
 
-    hideShowGraph.innerHTML = hiddenVisual ? 'Show amplitude graph' : 'Hide amplitude graph';
+    showHideVisual.innerHTML = hiddenVisual ? 'Show amplitude graph' : 'Hide amplitude graph';
 }
 
 /**

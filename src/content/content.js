@@ -3,14 +3,16 @@
  * @license CC0-1.0
  */
 
+/* Constants */
+
+const FREQUENCY_CUT_OFF = 0.7125;
+
 /* Global Variables */
 
 let _mediaStream = null;
 let _mediaStreamElements = null;
+
 let _visualAnimationFrame = null;
-
-/* HTML Elements */
-
 let _visual = null;
 let _visualCtx = null;
 
@@ -45,13 +47,14 @@ async function handleMessage(message) {
             _mediaStreamElements = getMediaStreamElements(_mediaStream);
             break;
         case 'stop-media-stream':
-            if (_mediaStream != null) {
+            if (_mediaStream != null && _mediaStreamElements != null) {
                 stopMediaStream(_mediaStream, _mediaStreamElements);
             }
             break;
         case 'show-hide-visual':
             if (_visual != null) {
                 _visual.remove();
+                _visual = null;
             }
             if (message.hiddenVisual) {
                 cancelAnimationFrame(_visualAnimationFrame);
@@ -59,9 +62,9 @@ async function handleMessage(message) {
             else {
                 _visual = document.createElement('canvas');
                 _visual.setAttribute('id', 'volume-capper-visual');
-                document.body.appendChild(_visual);
+                document.body.append(_visual);
                 _visualCtx = _visual.getContext('2d');
-                checkMediaStreamElementsAvailability();
+                startVisual(_visual, _visualCtx);
             }
             break;
     }
@@ -124,13 +127,15 @@ function getMediaStreamElements(mediaStream) {
         gain: -2
     });
     let dataArray = new Uint8Array(analyserNode.frequencyBinCount);
+
+    mediaStreamAudioSourceNode.connect(audioContext.destination);
     mediaStreamAudioSourceNode.connect(analyserNode);
     mediaStreamAudioSourceNode.connect(gainNode);
-    mediaStreamAudioSourceNode.connect(audioContext.destination);
-    
+
     analyserNode.connect(audioContext.destination);
-    
+
     gainNode.connect(audioContext.destination);
+    
     return {
         audioContext,
         mediaStreamAudioSourceNode,
@@ -140,14 +145,14 @@ function getMediaStreamElements(mediaStream) {
     };
 }
 
-function checkMediaStreamElementsAvailability() {
+function startVisual(visual, visualCtx) {
     setTimeout(
         () => {
             if (_mediaStreamElements != null) {
-                drawVisual(_visual, _visualCtx, _mediaStreamElements.analyserNode, _mediaStreamElements.dataArray);   
+                drawVisual(visual, visualCtx, _mediaStreamElements.analyserNode, _mediaStreamElements.dataArray);   
             }
             else {
-                checkMediaStreamElementsAvailability();
+                startVisual(visual, visualCtx, _mediaStreamElements);
             }
         }
     )
@@ -157,11 +162,13 @@ function checkMediaStreamElementsAvailability() {
  * Draws the visual on the tab page
  * 
  * @function drawVisual
+ * @param { HTMLCanvasElement } visual
+ * @param { CanvasRenderingContext2D } visualCtx
  * @param { AnalyserNode } analyserNode 
  * @param { Uint8Array } dataArray 
  */
 function drawVisual(visual, visualCtx, analyserNode, dataArray) {
-    let _visualAnimationFrame = requestAnimationFrame(
+    _visualAnimationFrame = requestAnimationFrame(
         () => {
             drawVisual(visual, visualCtx, analyserNode, dataArray);
         }
@@ -170,13 +177,12 @@ function drawVisual(visual, visualCtx, analyserNode, dataArray) {
     
     analyserNode.getByteFrequencyData(dataArray);
     let average = findVolumeAverage(dataArray);
-    let barWidth = visual.width / dataArray.length * 1.5 * 2;
+    let barWidth = visual.width / dataArray.length / FREQUENCY_CUT_OFF * 2;
     let x = 0;
     for (let volume of dataArray) {
         let barHeight = volume * visual.height / 255;
         visualCtx.fillStyle = '#4285F4';
         visualCtx.fillRect(x, visual.height - barHeight, barWidth, barHeight);
-        
         x += barWidth - 1;
     }
 }
@@ -190,8 +196,8 @@ function drawVisual(visual, visualCtx, analyserNode, dataArray) {
  */
 function findVolumeAverage(dataArray) {
     let sum = 0;
-    for (let volume of dataArray) {
-        sum += volume;
+    for (let i = 0; i < dataArray.length * FREQUENCY_CUT_OFF; i++) {
+        sum += dataArray[i];
     }
     return sum / dataArray.length;
 }
